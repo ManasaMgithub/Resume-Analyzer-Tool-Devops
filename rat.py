@@ -1,4 +1,5 @@
 import os
+import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 from langchain_community.tools import WikipediaQueryRun
 from langchain_community.utilities import WikipediaAPIWrapper
@@ -245,20 +246,20 @@ if resume_file and jd_file:
             ]
         })
 
-        result = response["structured_response"]
+        structured_result = response["structured_response"]
 
         st.subheader("📄 Resume Screening Report")
 
         st.success("Analysis Completed Successfully ✅")
 
         st.markdown("## 🎯 Final Decision")
-        st.write(result.decision)
+        st.write(structured_result.decision)
 
         st.markdown("## 📊 Overall Score")
-        st.write(f"{result.score}/100")
+        st.write(f"{structured_result.score}/100")
 
-        result = response["messages"][-1].content
-        parts = result.split("NOTES:")
+        salary_text = response["messages"][-1].content
+        parts = salary_text.split("NOTES:")
 
         details = parts[0]
         notes = parts[1] if len(parts) > 1 else ""
@@ -268,6 +269,35 @@ if resume_file and jd_file:
 
         st.markdown("## 📝 Detailed Notes")
         st.write(notes)
+        
+
+        st.markdown("## 📈 Resume Match Graph")
+
+        fig, ax = plt.subplots(figsize=(5,4))
+
+        ax.bar(
+        ["Resume Score"],
+        [structured_result.score]
+        )
+
+        ax.set_ylim(0, 100)
+        ax.set_ylabel("Score")
+        ax.set_title("Resume Matching Score")
+
+        st.pyplot(fig)
+        
+
+        st.markdown("## 📈 Resume Match Analysis")
+
+        fig, ax = plt.subplots()
+
+        ax.pie(
+        [structured_result.score, 100-structured_result.score],
+        labels=["Matched", "Gap"],
+        autopct="%1.1f%%"
+        )
+
+        st.pyplot(fig)
 #         try:
 #     response = sup_agent.invoke({
 #         "messages": [
